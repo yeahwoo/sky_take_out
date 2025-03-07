@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.DishFlavorMapper">
+    <!-- 启用生成主键 -->
+    <insert id="insertBatch">
+        insert into dish_flavor(dish_id, name, value) values
+        <!-- 传过来的列表参数名为flavors 每一项名称设置为flavor values每一项键的分隔符为, -->
+        <foreach collection="flavors" item="flavor" separator=",">
+            (#{flavor.dishId},#{flavor.name},#{flavor.value})
+        </foreach>
+    </insert>
+
+    <delete id="deleteByIds">
+        delete from dish_flavor where dish_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
