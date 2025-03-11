@@ -44,4 +44,27 @@
             #{id}
         </foreach>
     </delete>
+
+    <update id="update">
+        update dish
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="listByCategoryId" resultType="com.sky.entity.Dish">
+        select * from dish where category_id = #{categoryId} and status = 1
+    </select>
+
+    <select id="listBySetmealIds" resultType="com.sky.entity.Dish">
+        select dish.* from dish left join setmeal_dish on dish.id = setmeal_dish.dish_id where setmeal_id = #{setmealId}
+    </select>
 </mapper>

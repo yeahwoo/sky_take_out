@@ -7,6 +7,7 @@ import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
+import com.sky.entity.SetmealDish;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.DishFlavorMapper;
 import com.sky.mapper.DishMapper;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -80,7 +82,7 @@ public class DishServiceImpl implements DishService {
 
         // 被套餐关连的套餐不能删（查setmeal_dish）
         // 查出来看是不是null
-        List<Dish> setmealDishes = setmealDishMapper.listByIds(ids);
+        List<SetmealDish> setmealDishes = setmealDishMapper.listByIds(ids);
         if (!setmealDishes.isEmpty())
             throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
 
@@ -88,5 +90,45 @@ public class DishServiceImpl implements DishService {
         dishMapper.deleteByIds(ids);
         dishFlavorMapper.deleteByIds(ids);
 
+    }
+
+    public DishVO getByIdWithFlavor(Long id) {
+        DishVO dishVO = new DishVO();
+        // 首先根据id查出菜品
+        List<Dish> dishList = dishMapper.listByIds(List.of(id));
+        if (dishList.isEmpty()) return null;
+        Dish dish = dishList.get(0);
+        // 将其封装到DishVO中
+        BeanUtils.copyProperties(dish, dishVO);
+        // 再根据id查口味并封装
+        List<DishFlavor> dishFlavor = dishFlavorMapper.getById(id);
+        dishVO.setFlavors(dishFlavor);
+        return dishVO;
+    }
+
+    @Transactional
+    public void updateDishWithFlavor(DishDTO dishDTO) {
+        // 首先将dishDTO封装到dish中
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO, dish);
+        // 更新dish表
+        dishMapper.update(dish);
+        // 删除后再插入新的（先判空）
+        // 先删掉
+        Long dishId = dishDTO.getId();
+        dishFlavorMapper.deleteByIds(List.of(dishId));
+        List<DishFlavor> dishFlavors = dishDTO.getFlavors();
+        if (!dishFlavors.isEmpty()) {
+            // 再插入
+            // 由于DishDTO传过来的flavor中dishId是空的，因此需要手动设置
+            for (DishFlavor dishFlavor : dishFlavors) {
+                dishFlavor.setDishId(dishId);
+            }
+            dishFlavorMapper.insertBatch(dishFlavors);
+        }
+    }
+
+    public List<Dish> listByCategoryId(Long categoryId) {
+        return dishMapper.listByCategoryId(categoryId);
     }
 }
