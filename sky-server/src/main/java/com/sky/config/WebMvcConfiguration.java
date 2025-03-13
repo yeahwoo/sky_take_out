@@ -42,7 +42,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
      * @return
      */
     @Bean
-    public Docket docket() {
+    public Docket docketAdmin() {
         ApiInfo apiInfo = new ApiInfoBuilder()
                 // 设置文档标题
                 .title("苍穹外卖项目接口文档")
@@ -53,13 +53,37 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                 .build();
         // 用swagger2.0版本生成文档
         Docket docket = new Docket(DocumentationType.SWAGGER_2)
+                .groupName("管理端接口")
                 .apiInfo(apiInfo)
                 .select()
                 // 扫描controller的包，解析并生成测试接口
-                .apis(RequestHandlerSelectors.basePackage("com.sky.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.sky.controller.admin"))
                 .paths(PathSelectors.any())
                 .build();
-        log.info("生成swagger测试接口文档...");
+        log.info("生成swagger管理端接口文档...");
+        return docket;
+    }
+
+    @Bean
+    public Docket docketUser() {
+        ApiInfo apiInfo = new ApiInfoBuilder()
+                // 设置文档标题
+                .title("苍穹外卖项目接口文档")
+                // 指定苍穹外卖项目的版本号
+                .version("2.0")
+                // 设置文档描述
+                .description("苍穹外卖项目接口文档")
+                .build();
+        // 用swagger2.0版本生成文档
+        Docket docket = new Docket(DocumentationType.SWAGGER_2)
+                .groupName("用户端接口")
+                .apiInfo(apiInfo)
+                .select()
+                // 扫描controller的包，解析并生成测试接口
+                .apis(RequestHandlerSelectors.basePackage("com.sky.controller.user"))
+                .paths(PathSelectors.any())
+                .build();
+        log.info("生成swagger用户端接口文档...");
         return docket;
     }
 
