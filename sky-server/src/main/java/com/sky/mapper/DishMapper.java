@@ -75,4 +75,11 @@ public interface DishMapper {
      * @return
      */
     List<Dish> listBySetmealIds(Long setmealId);
+
+    /**
+     * 条件查询
+     * @param dish
+     * @return
+     */
+    List<Dish> list(Dish dish);
 }
