@@ -1,5 +1,6 @@
 package com.sky.controller.user;
 
+import com.sky.constant.RedisKeyConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.entity.Dish;
 import com.sky.result.Result;
@@ -9,9 +10,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.List;
 
 @RestController("userDishController")
@@ -21,6 +24,8 @@ import java.util.List;
 public class DishController {
     @Autowired
     private DishService dishService;
+    @Autowired
+    RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 根据分类id查询菜品
@@ -31,11 +36,19 @@ public class DishController {
     @GetMapping("/list")
     @ApiOperation("根据分类id查询菜品")
     public Result<List<DishVO>> list(Long categoryId) {
+        // 首先去redis中查询，如果查到了就直接返回
+        String key = RedisKeyConstant.DISH_CATEGORY_PREFIX + categoryId;
+        List<DishVO> dishList = (List<DishVO>) redisTemplate.opsForValue().get(key);
+        if(dishList!=null && !dishList.isEmpty()){
+            return Result.success(dishList);
+        }
+
+        // 如果找不到再去数据库找，并且存在redis中
         Dish dish = new Dish();
         dish.setCategoryId(categoryId);
         dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
-
         List<DishVO> list = dishService.listWithFlavor(dish);
+        redisTemplate.opsForValue().set(key, list);
 
         return Result.success(list);
     }

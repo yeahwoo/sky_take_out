@@ -59,4 +59,10 @@ public interface DishService {
      */
     List<DishVO> listWithFlavor(Dish dish);
 
+    /**
+     * 修改菜品状态
+     * @param status
+     * @param id
+     */
+    void updateStatus(Integer status, Long id);
 }
