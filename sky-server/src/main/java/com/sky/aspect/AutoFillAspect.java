@@ -48,29 +48,54 @@ public class AutoFillAspect {
         if (type == OperationType.INSERT) {
             // 插入操作
             // 填充创建时间和用户、更新时间和用户
-
             // 通过反射获取指定参数的set方法
             // 参数默认选择第一个参数即可
             Class<?> argsClass = args[0].getClass();
-            Method setCreateTime = argsClass.getDeclaredMethod(AutoFillConstant.SET_CREATE_TIME, LocalDateTime.class);
-            Method setCreateUser = argsClass.getMethod(AutoFillConstant.SET_CREATE_USER, Long.class);
-            Method setUpdateTime = argsClass.getMethod(AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
-            Method setUpdateUser = argsClass.getMethod(AutoFillConstant.SET_UPDATE_USER, Long.class);
 
+            Method setCreateTime = getMethodSafe(argsClass, AutoFillConstant.SET_CREATE_TIME, LocalDateTime.class);
+            Method setCreateUser = getMethodSafe(argsClass, AutoFillConstant.SET_CREATE_USER, Long.class);
+            Method setUpdateTime = getMethodSafe(argsClass, AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
+            Method setUpdateUser = getMethodSafe(argsClass, AutoFillConstant.SET_UPDATE_USER, Long.class);
             // 调用方法
-            setCreateTime.invoke(args[0], LocalDateTime.now());
-            setCreateUser.invoke(args[0], BaseContext.getCurrentId());
-            setUpdateTime.invoke(args[0], LocalDateTime.now());
-            setUpdateUser.invoke(args[0], BaseContext.getCurrentId());
-
+            invokeSafe(setCreateTime, args[0], LocalDateTime.now());
+            invokeSafe(setCreateUser, args[0], BaseContext.getCurrentId());
+            invokeSafe(setUpdateTime, args[0], LocalDateTime.now());
+            invokeSafe(setUpdateUser, args[0], BaseContext.getCurrentId());
         } else if (type == OperationType.UPDATE) {
             Class<?> argsClass = args[0].getClass();
-            Method setUpdateTime = argsClass.getMethod(AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
-            Method setUpdateUser = argsClass.getMethod(AutoFillConstant.SET_UPDATE_USER, Long.class);
-
-            setUpdateTime.invoke(args[0], LocalDateTime.now());
-            setUpdateUser.invoke(args[0], BaseContext.getCurrentId());
+            Method setUpdateTime = getMethodSafe(argsClass, AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
+            Method setUpdateUser = getMethodSafe(argsClass, AutoFillConstant.SET_UPDATE_USER, Long.class);
+            invokeSafe(setUpdateTime, args[0], LocalDateTime.now());
+            invokeSafe(setUpdateUser, args[0], BaseContext.getCurrentId());
         }
 
+    }
+
+    private Method getMethodSafe(Class<?> clazz, String methodName, Class<?> paramType, boolean declared) {
+        try {
+            // 如果declared为true代表获取私有方法，需要设置访问权限（method.setAccessible(true)）
+            Method method = declared ? clazz.getDeclaredMethod(methodName, paramType) : clazz.getMethod(methodName, paramType);
+            if (declared) method.setAccessible(true);
+            return method;
+        } catch (NoSuchMethodException e) {
+            log.info("方法 {} 不存在", methodName);
+            return null;
+        }
+    }
+
+    private Method getMethodSafe(Class<?> clazz, String methodName, Class<?> paramType) {
+        return getMethodSafe(clazz, methodName, paramType, false);
+    }
+
+    private void invokeSafe(Method method, Object target, Object value) {
+        if (method != null) {
+            try {
+                method.invoke(target, value);
+            } catch (IllegalAccessException e) {
+                log.error("方法调用权限异常: {}", e.getMessage());
+            } catch (Exception e) {
+                log.error("未知异常: {}", e.getMessage());
+            }
+        }
     }
 }
