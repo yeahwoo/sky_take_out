@@ -112,4 +112,11 @@ public interface OrderService {
      * @param ordersCancelDTO
      */
     void cancelOrder4Admin(OrdersCancelDTO ordersCancelDTO) throws Exception;
+
+    /**
+     * 用户催单
+     *
+     * @param orderId
+     */
+    void remind(Long orderId);
 }

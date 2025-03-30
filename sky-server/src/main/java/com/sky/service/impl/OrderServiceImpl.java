@@ -21,6 +21,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,9 @@ public class OrderServiceImpl implements OrderService {
     private String geoCodeUrl;
     @Value("${sky.amap.directionUrl}")
     private String directionUrl;
+    // WebSocket工具类
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     /**
      * 用户提交订单
@@ -182,6 +186,15 @@ public class OrderServiceImpl implements OrderService {
                 .payStatus(Orders.PAID)
                 .checkoutTime(LocalDateTime.now())
                 .build();
+
+        // 来单提醒
+        // 封装消息类型、用户id和订单号
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", 1); // 1表示来单提醒信息
+        map.put("orderId", ordersDB.getId());
+        map.put("content", "商单号:" + outTradeNo);
+        // 调用群发消息方法发送提醒信息
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
 
         ordersMapper.update(orders);
     }
@@ -482,6 +495,23 @@ public class OrderServiceImpl implements OrderService {
         // 更新
         ordersMapper.update(newOrder);
 
+    }
+
+    @Override
+    public void remind(Long orderId) {
+        // 判断订单是否存在
+        Orders order = ordersMapper.getById(orderId);
+        if (order == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        // 封装请求参数
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", 2); // 2表示催单消息
+        map.put("orderId", orderId);
+        String tradeNum = order.getNumber();
+        map.put("content", "商单号：" + tradeNum);
+        // 调用工具类发送消息
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
     }
 
     /**
