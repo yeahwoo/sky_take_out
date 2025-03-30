@@ -53,6 +53,8 @@ public class PayServiceImpl implements PayService {
             return createErrorResponse("未知错误！");
         }
 
+        // TODO:将支付金额存到redis中
+
         // 请求支付成功接口，修改订单状态，对应的url是notify_url
         // 构造支付成功的通知数据
         JSONObject notifyData = new JSONObject();

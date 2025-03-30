@@ -7,24 +7,28 @@ import com.sky.entity.Orders;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
 public interface OrdersMapper {
     /**
      * 插入订单数据并生成订单号
+     *
      * @param order
      */
     void insert(Orders order);
 
     /**
      * 批量插入订单详情数据
+     *
      * @param orderDetailList
      */
     void insertOrderDetail(List<OrderDetail> orderDetailList);
 
     /**
      * 根据订单号查询订单
+     *
      * @param orderNumber
      */
     @Select("select * from orders where number = #{orderNumber}")
@@ -32,12 +36,14 @@ public interface OrdersMapper {
 
     /**
      * 修改订单信息
+     *
      * @param orders
      */
     void update(Orders orders);
 
     /**
      * 分页订单查询
+     *
      * @param ordersPageQueryDTO
      * @return
      */
@@ -45,6 +51,7 @@ public interface OrdersMapper {
 
     /**
      * 根据id查询订单
+     *
      * @param orderId
      * @return
      */
@@ -53,9 +60,20 @@ public interface OrdersMapper {
 
     /**
      * 根据订单状态统计订单数量
+     *
      * @param toBeConfirmed
      * @return
      */
     @Select("select count(*) from orders where status = #{status}")
     Integer countByStatus(Integer toBeConfirmed);
+
+    /**
+     * 根据订单状态和下单时间查询订单
+     *
+     * @param status
+     * @param orderTime
+     * @return
+     */
+    @Select("select * from orders where status = #{status} and order_time < #{orderTime}")
+    List<Orders> getOrderEarlier(Integer status, LocalDateTime orderTime);
 }

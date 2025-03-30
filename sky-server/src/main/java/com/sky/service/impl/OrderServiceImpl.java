@@ -107,6 +107,9 @@ public class OrderServiceImpl implements OrderService {
         order.setConsignee(addressBook.getConsignee());
         // 设置用户id
         order.setUserId(userId);
+        // 设置用户名
+        String userName = userMapper.getById(userId).getName();
+        order.setUserName(userName);
         // 设置电话号码
         order.setPhone(addressBook.getPhone());
         // 设置详细收获地址

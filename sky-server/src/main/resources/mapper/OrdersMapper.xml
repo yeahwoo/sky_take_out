@@ -77,4 +77,16 @@
         </where>
         order by order_time desc
     </select>
+
+    <update id="updateBatch" parameterType="list">
+        update orders
+        SET
+        status = #{list[0].status},
+        cancel_reason = #{list[0].cancelReason},
+        cancel_time = #{list[0].cancelTime}
+        WHERE id IN
+        <foreach collection="list" item="order" open="(" separator="," close=")">
+            #{order.id}
+        </foreach>
+    </update>
 </mapper>
