@@ -39,12 +39,12 @@ public class WeChatPayUtil {
     //微信支付下单接口地址
     public static final String JSAPI = "https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi";
     // 模拟支付接口
-    public static final String MY_API = "http://127.0.0.1:8080/pay/api";
+    public static final String MY_API = "http://127.0.0.1:8080/api/pay";
 
     //申请退款接口地址
     public static final String REFUNDS = "https://api.mch.weixin.qq.com/v3/refund/domestic/refunds";
     // 模拟退款接口
-    public static final String MY_REFUNDS = "https://0876-58-215-202-202.ngrok-free.app/pay/refunds";
+    public static final String MY_REFUNDS = "http://127.0.0.1:8080/api/refund";
 
     @Autowired
     private WeChatProperties weChatProperties;
@@ -295,4 +295,33 @@ public class WeChatPayUtil {
         //调用申请退款接口
         return post(REFUNDS, body);
     }
+
+    /**
+     * 模拟退款接口
+     * @param outTradeNo
+     * @param outRefundNo
+     * @param refund
+     * @param total
+     * @return
+     * @throws Exception
+     */
+    public String myRefund(String outTradeNo, String outRefundNo, BigDecimal refund, BigDecimal total) throws Exception {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("out_trade_no", outTradeNo);
+        jsonObject.put("out_refund_no", outRefundNo);
+
+        JSONObject amount = new JSONObject();
+        amount.put("refund", refund.multiply(new BigDecimal(100)).setScale(2, BigDecimal.ROUND_HALF_UP).intValue());
+        amount.put("total", total.multiply(new BigDecimal(100)).setScale(2, BigDecimal.ROUND_HALF_UP).intValue());
+        amount.put("currency", "CNY");
+
+        jsonObject.put("amount", amount);
+        jsonObject.put("notify_url", weChatProperties.getRefundNotifyUrl());
+
+        String body = jsonObject.toJSONString();
+
+        //调用申请退款接口
+        return post(MY_REFUNDS, body);
+    }
+
 }

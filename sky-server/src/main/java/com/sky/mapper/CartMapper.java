@@ -43,4 +43,11 @@ public interface CartMapper {
      * @param shoppingCart
      */
     void delete(ShoppingCart shoppingCart);
+
+    /**
+     * 批量加入购物车
+     * @param shoppingCartList
+     */
+    // 这里用不了AutoFill注解，因为插入的参数是List类型，没办法获得set方法，还是放在service中设置
+    void insertBatch(List<ShoppingCart> shoppingCartList);
 }

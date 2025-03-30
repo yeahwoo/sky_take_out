@@ -27,6 +27,11 @@ public class PayServiceImpl implements PayService {
         return errorResponse;
     }
 
+    /**
+     * 支付处理
+     * @param requestBody
+     * @return
+     */
     public Map<String, Object> payProcess(Map<String, Object> requestBody) {
         // 从请求体中解析金额
         String jsonString = JSONObject.toJSONString(requestBody);
@@ -36,7 +41,6 @@ public class PayServiceImpl implements PayService {
         JSONObject jsonObject = JSONObject.parseObject(jsonString);
         JSONObject amountObj = jsonObject.getJSONObject("amount");
         String total = amountObj.getString("total");
-        String currency = amountObj.getString("currency");
         Object openid = jsonObject.getJSONObject("payer").getString("openid");
         String mchid = jsonObject.getString("mchid");
         String orderNum = jsonObject.getString("out_trade_no");
@@ -101,6 +105,60 @@ public class PayServiceImpl implements PayService {
         // 构造响应
         Map<String, Object> response = new HashMap<>();
         response.put("prepay_id", prepayId);
+
+        // 返回封装好的响应体
+        return response;
+    }
+
+    /**
+     * 退款处理
+     * @param requestBody
+     * @return
+     */
+    public Map<String, Object> refundProcess(Map<String, Object> requestBody) {
+        // 从请求体中解析金额
+        String jsonString = JSONObject.toJSONString(requestBody);
+        // 輸出解析出的请求体
+        log.info("请求数据: {}", jsonString);
+
+        JSONObject jsonObject = JSONObject.parseObject(jsonString);
+        JSONObject amountObj = jsonObject.getJSONObject("amount");
+        // 退款金额
+        String refundStr = amountObj.getString("refund");
+        // 原始金额
+        String totalStr = amountObj.getString("total");
+        // 商户订单号
+        String orderNum = jsonObject.getString("out_trade_no");
+        // 退款单号
+        String refundNum = jsonObject.getString("out_refund_no");
+        // 请求退款成功接口
+        String notifyUrl = jsonObject.getString("notify_url");
+
+        // 验证两个单号是否一致
+        if(!orderNum.equals(refundNum))
+            return createErrorResponse("退款单号和原始单号不一致！");
+
+        // 验证退款金额是否大于原始金额
+        try {
+            BigDecimal total = new BigDecimal(totalStr);
+            BigDecimal refund = new BigDecimal(refundStr);
+            if (total.compareTo(refund) < 0)
+                return createErrorResponse("订单退款金额不可以大于原始金额！");
+        } catch (Exception e) {
+            return createErrorResponse("未知错误！");
+        }
+
+        // 以下不再请求接口处理退款成功的情况
+        // 直接在这里模拟
+
+        // 请求退款接口，修改订单状态，对应的url是notify_url（PayNotifyController，退款成功的处理没实现）
+        // 打印请求的退款成功处理url
+        log.info("退款成功请求地址: {}", notifyUrl);
+
+        // 构造响应（返回退款状态）
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", "SUCCESS");
+        response.put("message", "退款成功");
 
         // 返回封装好的响应体
         return response;
