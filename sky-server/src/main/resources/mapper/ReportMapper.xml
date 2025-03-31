@@ -2,13 +2,66 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.ReportMapper">
-    <select id = "getDailyTurnover" resultType="com.sky.dto.TurnoverDTO">
+    <select id="getDailyTurnover" resultType="com.sky.dto.TurnoverDTO">
         <!-- 这里一定要记得加别名，否则不能映射到TurnoverDTO类中的对应字段 -->
-        select date(order_time) as date, sum(amount) as turnover
-        from orders
-        where date(order_time) between #{begin} and #{end}
-          and status = #{status}
-        group by date(order_time)
-        order by date(order_time)
+        with recursive date_list as (
+        select #{begin} as date
+        # 联合查询，会将下面的查询结果纵向拼到原始表中（即只有一条date数据的表）
+        # union会去重，而union all不会去重
+        union all
+        # recursive会基于上一次查询的结果date然后查出一条新的日期
+        # date_add用于日期增加
+        select date_add(date, interval 1 day)
+        from date_list
+        # 知道当前日期等于2025-03-31停止
+        # 这里不可以是小于等于，跟for循环一样，最后一次会被执行
+        where date &lt; #{end})
+        # coalesce判断表达式sum(orders.amount)是否为空，如果为空则返回0
+        # group by子句会根据date_list.date分组，如果某一天没有订单，则sum(orders.amount)为空，则coalesce会返回0
+
+        # coalesce函数属于select子句，会随select子句一起执行
+        # 而select子句在where子句之后执行，因此如果时间限制条件放在where中，在coalesce执行之前就已经被过滤掉了
+        select date_list.date as date,
+        coalesce(sum(orders.amount), 0) as turnover
+        from date_list
+        # left join会保留左表所有字段，即date_list的所有日期
+        left join orders
+        # on子句筛选连接条件
+        # 先根据过滤条件orders.order_time between '2025-02-24' and '2025-03-31'筛选出范围内的数据
+        # 然后根据连接条件进一步筛选
+
+        # 可以不加时间限制条件，但是会导致左表的每一条数据都与整张右表匹配，开销大
+        # 而添加更多的限制条件可以缩小右表，提升效率
+        on date_list.date = date(orders.order_time)
+        and date(orders.order_time) between #{begin} and #{end}
+        <if test="status!=null">
+            and orders.status = #{status}
+        </if>
+        # 这里不可以将orders.order_time between '2025-02-24' and '2025-03-31'放在where子句中
+        # where子句会在两张表连接完成后再对中间表进行过滤
+        # select子句在where子句之后执行，因此如果时间限制条件放在where中，在coalesce执行之前就已经被过滤掉了
+        # 此时大表中的有些order_time字段是空的（某些日期没有订单），而NULL与日期比较会返回false，因此这些行会直接被过滤掉
+        group by date_list.date
+        order by date_list.date;
+    </select>
+
+    <select id="getUserStatistics" resultType="com.sky.dto.UserCountDTO">
+        with recursive date_list as (select #{begin} as date
+                                     union all
+                                     select date_add(date, interval 1 day)
+                                     from date_list
+                                     where date &lt; #{end})
+
+        select date_list.date                                    as date,
+               coalesce(count(u1.id), 0)                         as newUser,
+               (select count(u2.id)
+                from user u2
+                where date(u2.create_time) &lt;= date_list.date) as totalUser
+        from date_list
+                 left join user u1
+                           on date_list.date = date(u1.create_time)
+                               and date(u1.create_time) between #{begin} and #{end}
+        group by date_list.date
+        order by date_list.date;
     </select>
 </mapper>

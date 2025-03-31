@@ -25,8 +25,8 @@ public class OrderTask {
      * 处理超时订单，每分钟处理一次
      */
     // TODO:超时订单可以引入消息队列优化
-    // @Scheduled(cron = "0 * * * * ?")
-    @Scheduled(cron = "1/3 * * * * ?") // 测试代码
+    @Scheduled(cron = "0 * * * * ?")
+    // @Scheduled(cron = "1/3 * * * * ?") // 测试代码
     public void timeOutProcess() {
         log.info("处理超时未支付订单:{}", new Date());
         // 查找订单支付状态为待支付且下单时间早于15分钟前的订单
@@ -48,8 +48,8 @@ public class OrderTask {
     /**
      * 处理未完成订单，每天凌晨一点集中处理
      */
-    // @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0/8 * * * * ?") // 测试代码
+    @Scheduled(cron = "0 0 1 * * ?")
+    // @Scheduled(cron = "0/8 * * * * ?") // 测试代码
     public void incompleteProcess() {
         log.info("处理未完成订单:{}", new Date());
         // 查找配送状态为派送中，并且下单时间早于1小时前的订单（即前一天的订单）
