@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.ReportMapper">
+    <select id = "getDailyTurnover" resultType="com.sky.dto.TurnoverDTO">
+        <!-- 这里一定要记得加别名，否则不能映射到TurnoverDTO类中的对应字段 -->
+        select date(order_time) as date, sum(amount) as turnover
+        from orders
+        where date(order_time) between #{begin} and #{end}
+          and status = #{status}
+        group by date(order_time)
+        order by date(order_time)
+    </select>
+</mapper>
