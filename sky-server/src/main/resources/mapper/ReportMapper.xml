@@ -64,4 +64,41 @@
         group by date_list.date
         order by date_list.date;
     </select>
+
+    <select id="getOrderStatistics" resultType="com.sky.dto.OrderReportDTO">
+        with recursive date_list as (select #{begin} as date
+        union all
+        select date_add(date, interval 1 day)
+        from date_list
+        where date &lt; #{end})
+
+        select date_list.date as date,
+        coalesce(count(id), 0) as orderCount
+        from date_list
+        left join orders
+        on date_list.date = date(order_time)
+        and date(order_time) between #{begin} and #{end}
+        <if test="status!=null">
+            and status = #{status}
+        </if>
+        group by date_list.date
+        order by date_list.date;
+    </select>
+
+    <select id="getTop10" resultType="com.sky.dto.GoodsSalesDTO">
+        select name, sum(order_detail.number) as number from order_detail
+        left join orders on order_detail.order_id = orders.id
+        <where>
+            <if test="begin!=null">
+                and date(order_time) &gt;= #{begin}
+            </if>
+            <if test="end!=null">
+                and date(order_time) &lt;= #{end}
+            </if>
+        </where>
+        group by name
+        order by number desc
+        # 从0开始，取10条
+        limit 0,10
+    </select>
 </mapper>

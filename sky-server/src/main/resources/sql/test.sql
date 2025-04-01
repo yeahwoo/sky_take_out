@@ -88,4 +88,31 @@ from date_list
 group by date_list.date
 order by date_list.date;
 
+# 订单查询
+with recursive date_list as (select '2025-03-01' as date
+                             union all
+                             select date_add(date, interval 1 day)
+                             from date_list
+                             where date < '2025-03-30')
+
+select date_list.date         as date,
+       coalesce(count(id), 0) as orderCount
+from date_list
+         left join orders
+                   on date_list.date = date(order_time)
+                       and date(order_time) between '2025-03-01' and '2025-03-30'
+                       and status = 5
+group by date_list.date
+order by date_list.date;
+
+# top10
+select name, sum(order_detail.number)  sales
+from order_detail left join orders on
+ order_detail.order_id = orders.id
+and date(order_time) between '2025-03-01' and '2025-03-31'
+group by name
+order by sales desc
+# 从0开始，取10条
+limit 0, 10;
+
 

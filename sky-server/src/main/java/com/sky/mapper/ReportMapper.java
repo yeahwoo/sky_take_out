@@ -1,5 +1,7 @@
 package com.sky.mapper;
 
+import com.sky.dto.GoodsSalesDTO;
+import com.sky.dto.OrderReportDTO;
 import com.sky.dto.TurnoverDTO;
 import com.sky.dto.UserCountDTO;
 import org.apache.ibatis.annotations.Mapper;
@@ -25,4 +27,20 @@ public interface ReportMapper {
      * @return
      */
     List<UserCountDTO> getUserStatistics(Map<String, Object> parameter);
+
+    /**
+     * 订单统计
+     *
+     * @param parameter
+     * @return
+     */
+    List<OrderReportDTO> getOrderStatistics(Map<String, Object> parameter);
+
+    /**
+     * 销量统计
+     *
+     * @param parameter
+     * @return
+     */
+    List<GoodsSalesDTO> getTop10(Map<String, Object> parameter);
 }
