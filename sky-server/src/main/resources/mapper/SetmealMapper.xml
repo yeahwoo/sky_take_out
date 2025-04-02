@@ -3,8 +3,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.SetmealMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-       insert into setmeal (category_id,name,price,image,description,status,create_time,update_time,create_user,update_user)
-       values (#{categoryId},#{name},#{price},#{image},#{description},#{status},#{createTime},#{updateTime},#{createUser},#{updateUser})
+        insert into setmeal (category_id, name, price, image, description, status, create_time, update_time,
+                             create_user, update_user)
+        values (#{categoryId}, #{name}, #{price}, #{image}, #{description}, #{status}, #{createTime}, #{updateTime},
+                #{createUser}, #{updateUser})
     </insert>
 
     <select id="pageQuery" resultType="com.sky.vo.SetmealVO">
@@ -60,4 +62,15 @@
         </where>
     </select>
 
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(id) from setmeal
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+        </where>
+    </select>
 </mapper>
