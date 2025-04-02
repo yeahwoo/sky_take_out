@@ -5,4 +5,5 @@
 *Test.java
 **/test/
 *.yml
-/RSAKey/
+/sky-server/src/main/resources/RSAKey/
+/sky-server/src/main/resources/RSAKey/
